@@ -102,7 +102,8 @@ controller.change_order(
     id="YOUR_ORDER_ID",
     qty="5000",
     price="20.43",
-    timeInForce="Day"
+    timeInForce="Day",
+    ordType="Limit"
 )
 ```
 
