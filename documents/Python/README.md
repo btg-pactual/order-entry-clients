@@ -38,6 +38,8 @@ controller = OrderController(
     )
 ```
 
+
+
 > Create an order and receive the resulting order ID.
 
 ```Python
@@ -45,6 +47,7 @@ orderId = controller.create_order(
     symbol="PETR4",
     side="S",
     qty="5000",
+    ordType="Limit",
     price="20.41",
     timeInForce="Day",
     isDMA="true"
@@ -60,6 +63,7 @@ orderId = controller.create_order(
     side="S",
     qty="5000",
     price="20.41",
+    ordType="Limit",
     timeInForce="Day",
     isDMA="true",
     account="ACCOUNT", 
@@ -85,6 +89,7 @@ orderId = controller.create_order(
     side="S",
     qty="5000",
     price="20.41",
+    ordType="Limit",
     timeInForce="Day",
     isDMA="true",
     account="ACCOUNT", 
@@ -152,6 +157,30 @@ controller.get_order(
 ```Python
 controller.summary()
 ```
+
+
+### OrdType
+Specifies the order type.
+ 
+| Value | Description |
+| --- | --- |
+| Market | Market order |
+| Limit | Limit order |
+
+### TimeInForce
+Specifies how long the order remains in effect.
+ 
+| Value | Description |
+| --- | --- |
+| "Day" | The order will operate throughout the trading hours of the day. (does not participate in the auction). |
+| "Good Till Cancel” or "GTC" | The order will remain active until it is executed or canceled. |
+| "At the Opening" or "MOP" | Order valid for the opening auction. |
+| "Immediate or Cancel" or "IOC" | The order will be executed with the available quantity and immediately cancel the rest. |
+| "Fill or Kill" or "FOK" | If the order is not executed in full, the entire order will be cancelled. |
+| "Good Till Date" or "GTD" | This order will be valid until the date specified in the calendar below. |
+| "At the Close" or "MOC" | Order to be sent in the Closing Call. |
+| "Good for Auction" or "MOA" | Used for the opening auction and intraday auctions. |
+
 
 ## Support
 
