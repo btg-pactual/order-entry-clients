@@ -6512,9 +6512,11 @@
 		<field number='849' name='ParticipationRate' type='PERCENTAGE' />
 		<field number='850' name='TargetStrategyPerformance' type='FLOAT' />
 		<field number='851' name='LastLiquidityInd' type='INT'>
+			<value enum='0' description='NONE' />
 			<value enum='1' description='ADDED_LIQUIDITY' />
 			<value enum='2' description='REMOVED_LIQUIDITY' />
 			<value enum='3' description='LIQUIDITY_ROUTED_OUT' />
+			<value enum='4' description='AUCTION' />
 		</field>
 		<field number='852' name='PublishTrdIndicator' type='BOOLEAN'>
 			<value enum='Y' description='YES' />
