@@ -227,17 +227,17 @@ public class CreateNewOrderSingle {
 
 		if (this.isDMA()) {
 			if (this.getAccount() == null) {
-				this.validations.add("Account is required since is DMA");
+				this.validations.add("Account is required since it is DMA");
 			}
 			if (this.getExecBroker() == null) {
-				this.validations.add("ExecBroker is required since is DMA");
+				this.validations.add("ExecBroker is required since it is DMA");
 			}
 		}
 
 		// Validation to avoid unintentional order Market
 		if (this.getOrdType() == null && this.getPrice() == null) {
 			this.validations.add(
-					"Price or OrdType is required, This is a validation to avoid unintentional Market order, if that is your intention, please set ordType as Market!");
+					"Price or OrdType is required. This is a validation to avoid unintentional Market order, if that is your intention, please set ordType as Market!");
 		}
 
 		if (this.getOrdType() != null) {
