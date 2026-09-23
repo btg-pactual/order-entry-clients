@@ -26,7 +26,7 @@ For all strategies all the folowing tag:
 
 | Tag | TagName | Req | Type | Max Size | Comment |
 | --- | --- | --- | --- | --- | --- |
-| 50001 | TargetStrategy | Y | String | | Valid values: TWAP, VWAP, POV, PEGGED, ICEBERG, SNIPER, PEGGED/SNIPER, PEGGED/MARKET and TARGETCLOSE
+| 50001 | TargetStrategy | Y | String | | Valid values: TWAP, VWAP, POV, PEGGED, ICEBERG, SNIPER, PEGGED/SNIPER, PEGGED/MARKET, TARGETCLOSE, TIMED, PRE-OPEN, VOL-AUCTION, OPPORTUNISTIC-2, LIQUIDITY-CAPTURE and SHORTFALL
 
 ## Strategies
 
