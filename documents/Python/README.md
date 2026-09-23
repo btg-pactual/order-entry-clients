@@ -10,12 +10,13 @@ Get your token and use it in the examples below.
 > Instantiate an order controller. Provide your token, account number, execution broker and entity to start sending orders.
 sampleInterval is optional
 
-
+Below is a complete example of its use.
 [Full example](https://github.com/btg-pactual/order-entry-clients/blob/master/documents/Python/btgsolutions-tradeservices.py)
 
 Install
+```Python
 pip install btgsolutions-tradeservices-python-client
-
+```
 
 ```Python
 from btgsolutions_tradeservices import OrderController

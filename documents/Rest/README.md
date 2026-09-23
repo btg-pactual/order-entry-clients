@@ -28,20 +28,27 @@ Rest API documentation to integrate with Solutions Order Entry.
 - [6. Trade query and read](#6-trade-query-and-read)
   - [6.1. Parameters result](#61-parameters-result)
   - [6.2. Get Trades](#62-get-trades)
-- [7. Cancel](#6-cancel)
-  - [7.1. Cancel Order By Id](#61-cancel-order-by-id)
-  - [7.2. Cancel All User Order](#62-cancel-all-user-order)
-- [8. Algos](#7-algos)
-  - [8.1. TWAP](#71-twap)
-  - [8.2. VWAP](#72-vwap)
-  - [8.3. POV](#73-pov)
-  - [8.4. PEGGED](#74-pegged)
-  - [8.5. SNIPER](#75-sniper)
-  - [8.6. PEGGED-SNIPER](#76-pegged-sniper)
-  - [8.7. ICEBERG](#77-iceberg)
-  - [8.8. TARGETCLOSE](#78-targetclose)
-- [9. Type Dictionary](#8-type-dictionary)
-- [10. Formats](#9-formats)
+- [7. Cancel](#7-cancel)
+  - [7.1. Cancel Order By Id](#71-cancel-order-by-id)
+  - [7.2. Cancel All User Order](#72-cancel-all-user-order)
+- [8. Algos](#8-algos)
+  - [8.1. TWAP](#81-twap)
+  - [8.2. VWAP](#82-vwap)
+  - [8.3. POV](#83-pov)
+  - [8.4. PEGGED](#84-pegged)
+  - [8.5. SNIPER](#85-sniper)
+  - [8.6. PEGGED-SNIPER](#86-pegged-sniper)
+  - [8.7. ICEBERG](#87-iceberg)
+  - [8.8. TARGETCLOSE](#88-targetclose)
+  - [8.9. TIMED](#89-timed)
+  - [8.10. PRE-OPEN](#810-pre-open)
+  - [8.11. VOL-AUCTION](#811-vol-auction)
+  - [8.12. OPPORTUNISTIC](#812-opportunistic)
+  - [8.13. LIQUIDITY-CAPTURE](#813-liquidity-capture)
+  - [8.14. SHORTFALL](#814-shortfall)
+
+- [9. Type Dictionary](#9-type-dictionary)
+- [10. Formats](#10-formats)
  
 ## 1. Authentication
  
@@ -1228,11 +1235,229 @@ For the `"strategyParameter"` check out the parameters respectively
   "strategy" : "targetclose",
   "strategyParameter" : {    
     "start-time": "20240515-20:00:00",
+	"end-time": "20240515-21:00:00"
     "max-floor": "100"
   }
 }
 ```
+
+### 8.9. TIMED
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|NN|[UTC](#utc)||Y|Execution end time|
+|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
+|50002|auction-leftover|C|Long||Y|Order wants to participate in End of day Auction with leftover quantity|
+
+#### TIMED Body example
+``` json
+{
+  "symbol": "PETR4",
+  "side": "S",
+  "qty": "200",
+  "account": "114",
+  "execBroker": "935",
+  "ordType": "Limit",
+  "timeInForce": "day",
+  "price": "90.56",
+  "isDMA": "true",                    
+  "entity": "CLIENT_UAT",            
+  "memo": "TEXT",                    
+  "strategy" : "timed",
+  "strategyParameter" : {    
+    "start-time": "20240515-20:00:00",
+    "end-time": "20240515-21:00:00",
+    "max-floor": "100"
+  }
+}
+```
+
+
+### 8.10. PRE-OPEN
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|N|[UTC](#utc)||Y|Execution end time|
+|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
+
+#### PRE-OPEN Body example
+``` json
+{
+  "symbol": "PETR4",
+  "side": "S",
+  "qty": "200",
+  "account": "114",
+  "execBroker": "935",
+  "ordType": "Limit",
+  "timeInForce": "day",
+  "price": "90.56",
+  "isDMA": "true",                    
+  "entity": "CLIENT_UAT",            
+  "memo": "TEXT",                    
+  "strategy" : "pre-open",
+  "strategyParameter" : {
+    "start-time": "20240515-12:00:00",
+    "end-time": "20240515-13:10:00"
+  }
+}
+```
+
+
+### 8.11. VOL-AUCTION
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|NN|[UTC](#utc)||Y|Execution end time|
+|849|market-share|C|Decimal||Y|Maximum participation of the market volume. Required if no start time is set|
+|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
+
+#### VOL-AUCTION Body example
+``` json
+{
+  "symbol": "PETR4",
+  "side": "S",
+  "qty": "200",
+  "account": "114",
+  "execBroker": "935",
+  "ordType": "Limit",
+  "timeInForce": "day",
+  "price": "90.56",
+  "isDMA": "true",                    
+  "entity": "CLIENT_UAT",            
+  "memo": "TEXT",                    
+  "strategy" : "vol-auction",
+  "strategyParameter" : {    
+    "start-time": "20240515-20:00:00",
+    "end-time": "20240515-21:00:00",
+    "market-share": 10
+  }
+}
+```
+
+
+### 8.12. OPPORTUNISTIC
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
+|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
+|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|N|[UTC](#utc)||Y|Execution end time|
+|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
+|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
+|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
+|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+
+
+#### OPPORTUNISTIC Body example
+``` json
+{
+    "symbol": "PETR4",
+    "side": "S",
+    "qty": "200",
+    "account": "114",
+    "execBroker": "935",
+    "ordType": "Limit",
+    "timeInForce": "day",
+    "price": "90.56",
+    "isDMA": "true",
+    "entity": "CLIENT_UAT",
+    "memo": "TEXT",
+    "strategy": "opportunistic-2",
+    "strategyParameter": {
+        "urgency": "Moderate",
+        "max-vol-participation": 10,
+        "min-vol-participation": 2,
+        "start-time": "20240515-20:00:00",
+        "end-time": "20240515-21:00:00",
+        "trade-at-close": "true"
+    }
+}
+ ```
  
+
+### 8.13. LIQUIDITY-CAPTURE
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
+|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
+|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|N|[UTC](#utc)||Y|Execution end time|
+|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
+|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
+|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
+|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+
+
+#### LIQUIDITY-CAPTURE Body example
+``` json
+{
+    "symbol": "PETR4",
+    "side": "B",
+    "qty": "500",
+    "account": "114",
+    "execBroker": "935",
+    "ordType": "Limit",
+    "timeInForce": "day",
+    "price": "90.56",
+    "isDMA": "true",
+    "entity": "CLIENT_UAT",
+    "memo": "TEXT",
+    "strategy": "liquidity-capture",
+    "strategyParameter": {
+        "urgency": "Passive",
+        "max-vol-participation": 15,
+        "start-time": "20240515-20:00:00",
+        "end-time": "20240515-21:00:00",
+        "finish-price": 91.00
+    }
+}
+```
+
+
+### 8.14. SHORTFALL
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
+|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
+|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|N|[UTC](#utc)||Y|Execution end time|
+|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
+|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
+|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
+|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+
+
+#### SHORTFALL Body example
+
+``` json
+{
+    "symbol": "PETR4",
+    "side": "S",
+    "qty": "1000",
+    "account": "114",
+    "execBroker": "935",
+    "ordType": "Limit",
+    "timeInForce": "day",
+    "price": "90.56",
+    "isDMA": "true",
+    "entity": "CLIENT_UAT",
+    "memo": "TEXT",
+    "strategy": "shortfall",
+    "strategyParameter": {
+        "urgency": "Aggressive",
+        "max-vol-participation": 20,
+        "min-vol-participation": 5,
+        "start-time": "20240515-20:00:00",
+        "end-time": "20240515-21:00:00",
+        "finish-today": "true"
+    }
+}
+```
+
  
 ## 9. Type Dictionary
  

@@ -13,6 +13,12 @@ Fix API 4.4 extension for algo, add this parameters to New Order Single (35=D) o
   - [PEGGED/SNIPER](#peggedsniper)
   - [PEGGED/MARKET](#peggedmarket)
   - [TARGETCLOSE](#targetclose)
+  - [TIMED](#timed)
+  - [PRE-OPEN](#pre-open)
+  - [VOL-AUCTION](#vol-auction)
+  - [OPPORTUNISTIC](#opportunistic)
+  - [LIQUIDITY-CAPTURE](#liquidity-capture)
+  - [SHORTFALL](#shortfall)
 
 ## All requests
 
@@ -227,3 +233,78 @@ For all strategies all the folowing tag:
 | 50019 | AuctionMarket WithProtectionBps | N | Int | | Bps from last trade before Closing Auction to send |
 | 50020 | CloseAuctionParticipation | N | Decimal | | Close auction target participation of the market volume (in percentage) |
 | 50021 | MaximumCloseAuctionParticipation | N | Decimal | | Close auction maximum participation of the market volume (in percentage) |
+
+
+
+## TIMED
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|NN|[UTC](#utc)||Y|Execution end time|
+|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
+|50002|auction-leftover|C|Long||Y|Order wants to participate in End of day Auction with leftover quantity|
+
+
+
+## PRE-OPEN
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|N|[UTC](#utc)||Y|Execution end time|
+|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
+
+
+
+## VOL-AUCTION
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|NN|[UTC](#utc)||Y|Execution end time|
+|849|market-share|C|Decimal||Y|Maximum participation of the market volume. Required if no start time is set|
+|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
+
+
+## OPPORTUNISTIC
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
+|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
+|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|N|[UTC](#utc)||Y|Execution end time|
+|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
+|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
+|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
+|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+
+ 
+
+## LIQUIDITY-CAPTURE
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
+|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
+|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|N|[UTC](#utc)||Y|Execution end time|
+|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
+|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
+|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
+|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+
+
+## SHORTFALL
+|Tag|Key|Req|Type|Default|Amend|Comment|
+|---|---|---|---|---|---|---
+|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
+|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
+|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
+|168|start-time|N|[UTC](#utc)||Y|Execution start time|
+|126|end-time|N|[UTC](#utc)||Y|Execution end time|
+|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
+|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
+|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
+|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+
+
