@@ -213,7 +213,7 @@ public class CreateOrderReplace {
 		// Validation to avoid unintentional order Market
 		if (this.getOrdType() == null && this.getPrice() == null) {
 			this.validations.add(
-					"Price or OrdType is required, This is a validation to avoid unintentional Market order, if that is your intention, please set ordType as Market!");
+					"Price or OrdType is required. This is a validation to avoid unintentional Market order, if that is your intention, please set ordType as Market!");
 		}
 
 		if (this.getOrdType() != null) {
