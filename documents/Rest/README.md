@@ -1,1562 +1,708 @@
-# API Rest
- 
-Rest API documentation to integrate with Solutions Order Entry.
- 
-## Summary
-- [1. Authentication](#1-authentication)
-- [2. Observation](#2-observation)
-- [3. Create Order](#3-create-order)
-  - [3.1. Required parameters](#31-required-parameters)
-  - [3.2. Create Order (DMA/Limit)](#32-create-order-dmalimit)
-  - [3.3. Create Order (DMA/Market)](#33-create-order-dmamarket)
-  - [3.4. Create Order (DMA/StopLimit)](#34-create-order-dmastoplimit)
-- [4. Change order](#4-change-order)
-  - [4.1. Required parameters](#41-required-parameters)
-  - [4.2. Change Order (DMA/Limit)](#42-change-order-dmalimit)
-  - [4.3. Change Order (DMA/Market)](#43-change-order-dmamarket)
-  - [4.4. Change Order (DMA/StopLimit)](#44-change-order-dmastoplimit)
-- [5. Order query and read](#5-query-and-read)
-  - [5.1. Parameters result](#51-parameters-result)
-  - [5.2. Query Order By Id](#52-query-order-by-id)
-  - [5.3. Query Order By Parent](#53-query-order-by-parent)
-  - [5.4. Query Order By Memo](#54-query-order-by-memo)
-  - [5.5. Query Order By Status](#55-query-order-by-status)
-  - [5.6. Query Order By Symbol](#56-query-order-by-symbol)
-  - [5.7. Query Order By Complete](#57-query-order-by-complete)
-  - [5.8. Query Order By Side](#58-query-order-by-side)  
-  - [5.9. Consult All Orders](#59-consult-all-orders)
-- [6. Trade query and read](#6-trade-query-and-read)
-  - [6.1. Parameters result](#61-parameters-result)
-  - [6.2. Get Trades](#62-get-trades)
-- [7. Cancel](#7-cancel)
-  - [7.1. Cancel Order By Id](#71-cancel-order-by-id)
-  - [7.2. Cancel All User Order](#72-cancel-all-user-order)
-- [8. Algos](#8-algos)
-  - [8.1. TWAP](#81-twap)
-  - [8.2. VWAP](#82-vwap)
-  - [8.3. POV](#83-pov)
-  - [8.4. PEGGED](#84-pegged)
-  - [8.5. SNIPER](#85-sniper)
-  - [8.6. PEGGED-SNIPER](#86-pegged-sniper)
-  - [8.7. ICEBERG](#87-iceberg)
-  - [8.8. TARGETCLOSE](#88-targetclose)
-  - [8.9. TIMED](#89-timed)
-  - [8.10. PRE-OPEN](#810-pre-open)
-  - [8.11. VOL-AUCTION](#811-vol-auction)
-  - [8.12. OPPORTUNISTIC](#812-opportunistic)
-  - [8.13. LIQUIDITY-CAPTURE](#813-liquidity-capture)
-  - [8.14. SHORTFALL](#814-shortfall)
+# BTG Solutions | OMS API (v3.0)
 
-- [9. Type Dictionary](#9-type-dictionary)
-- [10. Formats](#10-formats)
- 
-## 1. Authentication
- 
-It is necessary to provide a Bearer authorization token in the header of all
-calls and requests to the REST API. In this documentation, you may notice that a token
-is required when seeing the following character set: `{token}`. Consider replacing
-this field with your own authorization token.
- 
-## 2. Observation
- 
-This document describes how to submit and manage orders for the onshore market
-(Brazil), for offshore integration additional fields are required for instrument identification.
- 
-Depending on the library or tool that you are using to request our API, it may be necessary to set headers
-| Header | Value|
-| ---|---|
-| **User-Agent** | {generic value} |
-| **Content-Type** | application/json |
- 
- 
+Documentation for the BTG Solutions Orders API.
 
-## 3. Create Order
- 
-### 3.1. Required parameters
-|Tag|Key|Required|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|55|symbol|Y|String|-|N|Ticker symbol. Common, "human understood" representation of the security|
-|54|[side](#side)|Y|String|-|N|Side of order. Valid values "B" or "S". Check for details at [Side](#side)|
-|53|qty|Y|Decimal|-|Y|Overall/total quantity|
-|1|account|Y|Integer|-|N|Specifies the account.|
-|76|execBroker|Y|String|-|N|Specifies the broker code.|
-|40|[ordType](#ordtype)|Y|String|-|Y|Specifies the order type.|
-|59|[timeInForce](#timeinforce)|Y|String|-|Y|Specifies how long the order remains in effect. |
-|44|price|Y|Decimal|-|Y|Price per unit of quantity|
-|21|[isDMA](#isdma)|Y|Boolean|-|N|Indicates whether an order is DMA. If not, the order is classified as CARE.|
-|109|[entity](#entity)|Y|String|-|N|Specifies the entity.|
-|5149|memo|N|String|-|N|Custom field.|
-|99|stopPx|N|Decimal|-|N|Specifies the stop price. Required in a StopLimit request.|
- 
- 
-### 3.2. Create Order (DMA/Limit)
- `POST` `/api/v1/order`
+- **Tags:** Allocation, Order, Trade
+- **Versions:** `/api/v3` (current), `/api/v2` and `/api/v1` (legacy).
 
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-```JSON
-{
-  "symbol": "PETR4",                
-  "side": "S",                      
-  "qty": 200,                        
-  "account": 114,                    
-  "execBroker": "935",              
-  "ordType": "Limit",                
-  "timeInForce": "day",              
-  "price": 90.56,                    
-  "isDMA": true,                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT"                    
-}
-```
- 
-#### Response - 202 Accepted
-``` JSON
-{
- "message": "deaa13ad1cd74868a591b70fe8e93523"
-}
-```
-> Attention, the code that returns as the order creation response, example:
-`deaa13ad1cd74868a591b70fe8e93523`, will be used as the id to send a [Change Order (DMA/Limit)](#42-change-order-dmalimit)
-or [Cancel Order By Id](#61-cancel-order-by-id)
- 
-### 3.3. Create Order (DMA/MARKET)
-`POST` `/api/v1/order`
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-```JSON
-{
- "symbol": "PETR4",                
- "side": "S",                      
- "qty": "200",                      
- "account": "114",                  
- "execBroker": "935",              
- "ordType": "Market",              
- "timeInForce": "day",              
- "isDMA": "true",                  
- "entity": "CLIENT_UAT",            
- "memo": "TEXT"                    
-}
-```
-#### Response - 202 Accepted
-``` JSON
-{
- "message": "deaa13ad1cd74868a591b70fe8e93523"
-}
-```
-> Attention, the code returned as the order creation response, example:
-`deaa13ad1cd74868a591b70fe8e93523`, will be used as the id to send a [Change Order (DMA/Market)](#43-change-order-dmamarket)
-or [Cancel Order By Id](#61-cancel-order-by-id)
- 
-### 3.4. Create Order (DMA/StopLimit)
-`POST` `/api/v1/order`
- 
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-```JSON
-{
- "symbol": "PETR4",                
- "side": "S",                      
- "qty": "200",                      
- "account": "114",                  
- "execBroker": "935",              
- "ordType": "Stop limit",          
- "timeInForce": "day",              
- "price": "90.56",                  
- "stopPx": "90.00",
- "isDMA": "true",                  
- "entity": "CLIENT_UAT",            
- "memo": "TEXT"                    
-}
-```
-#### Response - 202 Accepted
-``` JSON
-{
- "message": "deaa13ad1cd74868a591b70fe8e93523"
-}
-```
-> Attention, the code returned as the order creation response, example:
-“deaa13ad1cd74868a591b70fe8e93523”, will be used as the id to send a [Change Order (DMA/Limit)](#42-change-order-dmalimit)
-or [Cancel Order By Id](#61-cancel-order-by-id)
- 
----
- 
-## 4. Change order
- 
-### 4.1. Required parameters
-|Tag|Key|Required|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|-|id|Y|String|-|N|ID returned as result from [Create Order](#3-create-order) request|
-|55|symbol|Y|String|-|N|Ticker symbol. Common, "human understood" representation of the security|
-|54|[side](#side)|Y|String|-|N|Side of order. Valid values "B" or "S"|
-|53|qty|Y|Decimal|-|Y|Overall/total quantity|
-|1|[account](#account)|Y|Integer|-|N|Specifies the account.|
-|76|execBroker|Y|String|-|N|Specifies the broker code.|
-|40|[ordType](#ordtype)|Y|String|-|Y|Specifies the order type.|
-|59|[timeInForce](#timeinforce)|Y|String|-|Y|Specifies how long the order remains in effect. |
-|44|price|Y|Decimal|-|Y|Price per unit of quantity, remove this tag to replace order to Market|
-|109|[entity](#entity)|Y|String|-|N|Specifies the entity.|
-|99|stopPx|N|Decimal|-|N|Specifies the stop price. Required in a StopLimit request.|
+## Table of contents
 
- 
-### 4.2. Change Order (DMA/Limit)
-`PUT` `/api/v1/order`
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-```JSON
-{
- "id": "deaa13ad1cd74868a591b70fe8e93523",      
- "ordType": "Limit",                            
- "account": "114",                              
- "execBroker": "935",                          
- "timeInForce": "Day",                          
- "price": 10,                                  
- "qty": 200                                    
-}
-```
- 
-#### Response - 202 Accepted
-``` JSON
-{
- "message": "deaa13ad1cd74868a591b70fe8e93523"
-}
-```
- 
-### 4.3. Change Order (DMA/Market)
-`PUT` `/api/v1/order`
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-```JSON
-{
- "id": "deaa13ad1cd74868a591b70fe8e93523",      
- "ordType": "Market",                          
- "account": "114",                              
- "execBroker": "935",                          
- "timeInForce": "Day",                          
- "qty": 200                                    
-}
- 
-```
-#### Response - 202 Accepted
-``` JSON
-{
- "message": "deaa13ad1cd74868a591b70fe8e93523"
-}
-```
- 
-### 4.4. Change Order (DMA/StopLimit)
-`PUT` `/api/v1/order`
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-```JSON
-{
- "id": "deaa13ad1cd74868a591b70fe8e93523",      
- "ordType": "Stop limit",                      
- "account": "114",                              
- "execBroker": "935",                          
- "timeInForce": "Day",                          
- "qty": 200                                    
-}
- 
-```
-#### Response - 202 Accepted
-``` JSON
-{
- "message": "deaa13ad1cd74868a591b70fe8e93523"
-}
-```
-## 5. Query and Read
- 
-### 5.1. Parameters result
-|Tag|Name|Type|Comment|
-|---|---|---|---|
-|17|execId|String|Specifies the unique identifier of the execution message as assigned by the sell-side.|
-|37|orderID|String|Specifies the order identifier as assigned by sell-side.|
-|11|clOrdId|String|Specifies the order identifier as assigned by the institution.|
-|55|symbol|String|Instrument identification.|
-|44|price|Decimal|Order price|
-|99|stopPx|Decimal|Specifies the stop price.|
-|110|minQty|Decimal|Specifies the quantity to be displayed in the order.|
-|111|maxFloor|Decimal|Specifies the apparent lot.|
-|636|workingIndicator|Boolean|Indicates whether the order is still being worked on.|
-|41|origClOrdID|String|Specifies the order origin identifier as assigned by the institution.|
-|198|secondaryOrderID|String|Specifies the order's secondary identifier as assigned by sell-side.|
-|58|text|String|Custom field. Display rejection reason when [ExecType](#execType) is Rejected|
-||memo|String|Custom field. Returns the value sent on [Create Order](#3-create-order)|
-|1|account|Integer|Specifies the account.|
-||resolvedAssignedUser|String|Identifies the user.|
-|109|[entity](#entity)|String|Specifies the entity.|
-||execBroker|Integer|Specifies the broker code.|
-|1180|applId|String|Identifies the application with which a message is associated|
-|75|tradeDate|Date|Specifies the trade creation date.|
-|54|side|String|Identifies the side of the order.|
-|53|qty|Decimal|Specifies the order quantity.|
-|150|[execType](#exectype)|String|Specifies the type of execution. |
-|6|avgPx|Decimal|Specifies the average price.|
-|14|cumQty|Decimal|Specifies the cumulative quantity executed.|
-|40|[ordType](#ordtype)|String|Specifies the order type. |
-|60|transactTime|[DateTime](#datetime)|Specifies the execution time.|
-|59|[timeInForce](#timeinforce)|[Date](#date)|Specifies how long the order remains in effect. |
-|432|expireDate|[DateTime](#datetime)|Specifies the trade expiration date. Applicable to orders with TimeInForce equal to Good Till Date (GTD) |
-|39|[ordStatus](#ordstatus)|String|Specifies the current OrdStatus. |
-||service|String|Specifies the service used.|
- 
-### 5.2. Query Order By Id
-``GET`` ``/api/v2/order/id/{id}``
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-Not applicable.
- 
-#### Response - 200 Ok
-``` JSON
-[
- {
- "execId": "840511000000001621",
- "orderID": "8493469644",
- "clOrdId": "4897c8f64fb64d9c8b41b08d0496ad07",
- "symbol": "ALPA4",
- "price": 8.96000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": "N",
- "origClOrdID": null,
- "secondaryOrderID": "8443791619",
- "text": null,
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "New",
- "avgPx": "0.0000",
- "cumQty": "0",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:37:07.656-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "New",
- "service": "DMA"
- }
-]
-```
+1. [Endpoint overview](#endpoint-overview)
+2. [Conventions](#conventions)
+3. [Order endpoints (V3)](#order-endpoints-v3)
+4. [Trade endpoints (V3)](#trade-endpoints-v3)
+5. [Allocation endpoints (V3)](#allocation-endpoints-v3)
+6. [Legacy endpoints (V2 / V1)](#legacy-endpoints-v2--v1)
+7. [Schemas](#schemas)
+8. [Algorithmic strategy parameters](#algorithmic-strategy-parameters)
 
-### 5.3. Query Order by Parent
-#### `GET` `/api/v2/order?parent={boolValue}`
-`boolValue` pode assumir valores de `true` ou `false`
+## Endpoint overview
 
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
-
-#### Body
-Not applicable.
-
-#### Response - 200 Ok
-``` JSON
-[
- {
- "execId": "840511000000001621",
- "orderID": "8493469644",
- "clOrdId": "4897c8f64fb64d9c8b41b08d0496ad07",
- "symbol": "ALPA4",
- "price": 8.96000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": "N",
- "origClOrdID": null,
- "secondaryOrderID": "8443791619",
- "text": null,
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "New",
- "avgPx": "0.0000",
- "cumQty": "0",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:37:07.656-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "New",
- "service": "DMA"
- }
-]
-```
-
-### 5.4. Query Order by Memo
-
-#### `GET` `/api/v2/order?memo={memo}`
-`memo` pode assumir o valor de qualquer string.
-
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
-
-#### Body
-Not applicable.
-
-#### Response - 200 Ok
-``` JSON
-[
- {
- "execId": "840511000000001621",
- "orderID": "8493469644",
- "clOrdId": "4897c8f64fb64d9c8b41b08d0496ad07",
- "symbol": "ALPA4",
- "price": 8.96000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": "N",
- "origClOrdID": null,
- "secondaryOrderID": "8443791619",
- "text": null,
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "New",
- "avgPx": "0.0000",
- "cumQty": "0",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:37:07.656-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "New",
- "service": "DMA"
- }
-]
-```
-
-### 5.5. Query Order by Status
-#### `GET` `/api/v2/order?status={status}`
-`status` pode assumir os valores: ``New``, ``Partial``, ``Filled``, `Done for day`, `Canceled`, `Replaced`, `Pending Cancel`, `Rejected`, `Pending New`, `Expired` e `Pending Replace`.
-
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
-
-#### Body
-Not applicable.
-
-#### Response - 200 Ok
-``` JSON
-[
- {
- "execId": "840511000000001621",
- "orderID": "8493469644",
- "clOrdId": "4897c8f64fb64d9c8b41b08d0496ad07",
- "symbol": "ALPA4",
- "price": 8.96000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": "N",
- "origClOrdID": null,
- "secondaryOrderID": "8443791619",
- "text": null,
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "New",
- "avgPx": "0.0000",
- "cumQty": "0",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:37:07.656-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "New",
- "service": "DMA"
- }
-]
-```
-
-### 5.6. Query Order by Symbol
-#### `GET` `/api/v2/order?symbol={symbol}`
-`symbol` deve ser um ticker válido.
-
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
-
-#### Body
-Not applicable.
-
-#### Response - 200 Ok
-``` JSON
-[
- {
- "execId": "840511000000001621",
- "orderID": "8493469644",
- "clOrdId": "4897c8f64fb64d9c8b41b08d0496ad07",
- "symbol": "ALPA4",
- "price": 8.96000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": "N",
- "origClOrdID": null,
- "secondaryOrderID": "8443791619",
- "text": null,
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "New",
- "avgPx": "0.0000",
- "cumQty": "0",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:37:07.656-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "New",
- "service": "DMA"
- }
-]
-```
-
-### 5.7. Query Order by Complete
-#### `GET` `/api/v2/order?complete={boolValue}`
-`boolValue` pode assumir o valor `true` ou `false`.
-
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
-
-#### Body
-Not applicable.
-
-#### Response - 200 Ok
-``` JSON
-[
- {
- "execId": "840511000000001621",
- "orderID": "8493469644",
- "clOrdId": "4897c8f64fb64d9c8b41b08d0496ad07",
- "symbol": "ALPA4",
- "price": 8.96000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": "N",
- "origClOrdID": null,
- "secondaryOrderID": "8443791619",
- "text": null,
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "New",
- "avgPx": "0.0000",
- "cumQty": "100",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:37:07.656-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "Filled",
- "service": "DMA"
- }
-]
-```
-
-### 5.8. Query Order by Side
-#### `GET` `/api/v2/order?Side={side}`
-`side` pode assumir valor de `Sell` ou `Buy`.
-
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
-
-#### Body
-Not applicable.
-
-#### Response - 200 Ok
-``` JSON
-[
- {
- "execId": "840511000000001621",
- "orderID": "8493469644",
- "clOrdId": "4897c8f64fb64d9c8b41b08d0496ad07",
- "symbol": "ALPA4",
- "price": 8.96000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": "N",
- "origClOrdID": null,
- "secondaryOrderID": "8443791619",
- "text": null,
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "New",
- "avgPx": "0.0000",
- "cumQty": "0",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:37:07.656-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "New",
- "service": "DMA"
- }
-]
-```
- 
-### 5.9. Consult All Orders
-``GET`` ``/api/v2/order/``
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-Not applicable.
- 
-#### Response - 200 Ok
-``` JSON
-[
- {
- "execId": "840511000000001621",
- "orderID": "8493469644",
- "clOrdId": "4897c8f64fb64d9c8b41b08d0496ad07",
- "symbol": "ALPA4",
- "price": 8.96000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": "N",
- "origClOrdID": null,
- "secondaryOrderID": "8443791619",
- "text": null,
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "New",
- "avgPx": "0.0000",
- "cumQty": "0",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:37:07.656-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "New",
- "service": "DMA"
- },
- {
- "execId": "740504000000008401",
- "orderID": null,
- "clOrdId": "f9d23e3a802d4cfab328cd64f1d2d49a",
- "symbol": "PETR4",
- "price": 4807.00000000,
- "stopPx": null,
- "minQty": null,
- "maxFloor": null,
- "workingIndicator": null,
- "origClOrdID": null,
- "secondaryOrderID": null,
- "text": "[B3]The user is not authorized to trade",
- "memo": null,
- "account": "114",
- "resolvedAssignedUser": "user@teste.com",
- "entity": "CLIENT_UAT",
- "execBroker": "935",
- "applId": "AABB054",
- "tradeDate": "2023-07-19",
- "side": "Sell",
- "qty": "100",
- "execType": "Rejected",
- "avgPx": "0.0000",
- "cumQty": "0",
- "ordType": "Limit",
- "transactTime": "2023-07-19T11:45:37.426-03:00",
- "timeInForce": "Day",
- "expireDate": "2023-07-19T03:00",
- "ordStatus": "Rejected",
- "service": "DMA"
- },
-]
- 
-```
- 
-## 6. Trade Query and Read
-
-### 6.1. Parameters result
-|Name|Type|Comment|
+| Method | Path | Summary |
 |---|---|---|
-|clientId|String||
-|account|Integer|Specifies the account.|
-|execBroker|Integer|Specifies the broker code.|
-|side|String|Identifies the side of the order.|
-|qty|Decimal|Specifies the order quantity.|
-|symbol|String|Instrument identification.|
-|currency|String||
-|country|String||
-|clOrdId|String|Specifies the order identifier as assigned by the institution.|
-|origClOrdID|String|Specifies the order origin identifier as assigned by the institution.|
-|enteredByUser|String|Identifies the user.|
-|businessUnit|String||
-|tradeDate|Date|Specifies the trade creation date.|
-|transactTime|[DateTime](#datetime)|Specifies the execution time (UTC).|
-|orderId|String|Specifies the order identifier as assigned by sell-side.|
-|deskId|String||
-|crossId|String||
-|execId|String||
-|execRefId|String||
-|text|String|Custom field. Display rejection reason when [ExecType](#execType) is Rejected|
-|memo|String|Custom field. Returns the value sent on [Create Order](#3-create-order)|
-|price|Decimal|Order price|
-|uniqueTradeId|String|Exchange unique id for this trade|
-|lastCapacity|String||
-|lastLiquidityIndicator|Integer|Indicates if the trade has add (1) or removed (2) Liquidity|
-|lastMkt|String|Indicates the exchange of this trade|
+| GET | [`/api/v3/order`](#get-apiv3order--all-orders) | All orders |
+| POST | [`/api/v3/order`](#post-apiv3order--new-order-single) | New order single |
+| PUT | [`/api/v3/order`](#put-apiv3order--replace-order) | Replace order |
+| DELETE | [`/api/v3/order`](#delete-apiv3order--cancel-multiple-orders) | Cancel multiple orders |
+| GET | [`/api/v3/order/summary`](#get-apiv3ordersummary--summarized-orders) | Summarized orders |
+| GET | [`/api/v3/order/{id}`](#get-apiv3orderid--order-by-id) | Order by ID |
+| DELETE | [`/api/v3/order/{id}`](#delete-apiv3orderid--cancel-order-by-id) | Cancel order by ID |
+| POST | [`/api/v3/order/basket`](#post-apiv3orderbasket--new-basket) | New basket |
+| DELETE | [`/api/v3/order/myorders`](#delete-apiv3ordermyorders--cancel-all-my-orders) | Cancel all my orders |
+| GET | [`/api/v3/trade`](#get-apiv3trade--all-trades) | All trades |
+| GET | [`/api/v3/trade/{id}`](#get-apiv3tradeid--trade-by-id) | Trade by ID |
+| GET | [`/api/v3/allocation`](#get-apiv3allocation--all-allocations) | All allocations |
+| GET | [`/api/v3/allocation/{id}`](#get-apiv3allocationid--allocation-by-id) | Allocation by ID |
+| GET | [`/api/v2/order`](#legacy-endpoints-v2--v1) | [V2] All orders |
+| GET | [`/api/v2/order/id/{id}`](#legacy-endpoints-v2--v1) | [V2] Order by ID |
+| DELETE | [`/api/v2/order/myorders`](#legacy-endpoints-v2--v1) | [V2] Cancel all my orders |
+| GET | [`/api/v2/trade`](#legacy-endpoints-v2--v1) | [V2] All trades |
+| POST | [`/api/v1/order`](#legacy-endpoints-v2--v1) | [V1] New order single |
+| PUT | [`/api/v1/order`](#legacy-endpoints-v2--v1) | [V1] Replace order |
+| DELETE | [`/api/v1/order/{id}`](#legacy-endpoints-v2--v1) | [V1] Cancel order by ID |
 
-### 6.2. Get Trades
-``GET`` ``/api/v2/trade``
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
-#### Query Parameters
-| Parameter | Comment |
-| --- | --- |
-| symbol | --- |
-| id | --- |
-| side | --- |
-| memo | --- |
+## Order endpoints (V3)
 
-#### Body
-Not applicable.
+### GET `/api/v3/order` — All orders
+Retrieves all orders based on the selected filters.
 
-#### Response - 200 Ok
-``` JSON
- [
-  {
-    "clientId": "CLIENT_UAT",
-    "account": "114",
-    "execBroker": "935",
-    "exchange": null,
-    "side": "Buy",
-    "qty": 1.0,
-    "symbol": "TF473",
-    "currency": "BRL",
-    "country": "BR",
-    "clOrdId": null,
-    "origClOrdId": null,
-    "enteredByUser": "user@teste.com",
-    "businessUnit": null,
-    "tradeDate": "2024-01-01T00:00:00",
-    "transactTime": "2024-01-01T01:01:01.01Z",
-    "orderId": "1234567890123",
-    "subaccount": null,
-    "deskId": null,
-    "crossId": null,
-    "execId": "123456789012345678",
-    "execRefId": null,
-    "text": null,
-    "memo": null,
-    "price": 5.0,
-    "uniqueTradeId": "12345",
-    "matchedQty": 0,
-    "isBustFill": false,
-    "tradeMatchId": null,
-    "lastCapacity": 1,
-    "lastLiquidityIndicator": 1,
-    "lastMkt": "BVMF"
-  }
- ]
-```
+| Query param | Type | Description |
+|---|---|---|
+| `complete` | boolean | Filter by completion |
+| `symbol` | string | Filter by symbol |
+| `status` | string | Filter by order status |
+| `side` | string | Filter by side |
+| `memo` | string | Filter by memo |
+| `parent` | boolean | Parent orders filter |
+| `user` | string | Filter by user |
 
+Responses: `200` (array of [Order](#order)), `204`, `401`, `500`.
 
-## 7. Cancel
+### POST `/api/v3/order` — New order single
+Creates an order. Body: [NewOrder](#neworder) (required).
+Responses: `200` [IdResponse](#idresponse), `400` [RejectReasonResponse](#rejectreasonresponse), `401`, `500`.
 
-### 7.1. Cancel Order By Id
-``DELETE`` ``/api/v1/order/{id}``
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-Not applicable.
- 
-#### Response - 202 Accepted
-``` JSON
+> **Note:** the examples below are for illustration only. Replace values such as `entity`, `execBroker`, `side`, `ordType`, `timeInForce` and `strategy` with the ones enabled for your account. Required fields are always `entity`, `execBroker`, `symbol`, `side`, `qty` and `ordType`. `isDMA` defaults to `true` and strategy orders can only be sent with `isDMA` set to true.
+
+#### Example 1 — Market order
+No `price` is sent.
+```json
 {
- "message": "deaa13ad1cd74868a591b70fe8e93523"
-}
-```
-
-### 7.2. Cancel All User Order
-``DELETE`` ``/api/v2/order/myorders``
-#### Header
-| Key | Value |
-| --- | --- |
-| Authorization | Bearer {token} |
- 
-#### Body
-Not applicable.
- 
-#### Response - 202 Accepted
-``` JSON
-{
- "message": "deaa13ad1cd74868a591b70fe8e93523"
-}
-```
----
- 
-## 8. Algos
-Below are the standard algos (for premium algos please consult Solutions team).
- 
-#### Parameter default
-Add to the body the fields `"strategy"` and `"strategyParameter"` like the example bellow.
- 
-#### Body example
-``` json
-{
-  "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
+  "entity": "CLIENT_UAT",
   "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "twap",
-  "strategyParameter" : {
-    // attributes
-  }
-}
-```
- 
-For the `"strategy"` parameter, check out the list of [Strategies](#chooseStrategyName).
-For the `"strategyParameter"` check out the parameters respectively
- 
- 
-### Strategies
-| strategyName        |
-| ---                 |
-| [TWAP](#71-twap)       |  
-| [VWAP](#72-vwap)       |  
-| [POV](#73-pov)        |  
-| [PEGGED](#74-pegged)   |
-| [SNIPER](#75-sniper)   |
-| [PEGGED-SNIPER](#76-pegged-sniper) |
-| [ICEBERG](#77-iceberg) |
-| [TARGETCLOSE](#78-targetclose) |
- 
- 
- 
-<!-- #### Strategy parameters -->
- 
-### 8.1. TWAP
- 
-|Tag|Key|Required|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
-|110|min-qty|N|Long|0|Y|Minimum quantity of the order to be executed|
-|849|market-share|N|Decimal||Y|Maximum participation of the market volume (in percentage) |
-|10044|would-price|N|Decimal||Y|Trigger price for the strategy|
-|10014|consider-cross-orders|N|Bool|N|Y|Flag to indicate if cross orders should be considered in the execution|
-|10015|consider-limit-price|N|Bool|N|Y|Flag to indicate if market executions above the limit price should be considered by the strategy|
-|168|start-time|N|UTC||Y|Execution start time|
-|126|end-time|N|UTC||Y|Execution end time|
-|50007|would-qty|N|Long||Y|Number of shares or contracts for I Would|
-|10020|would-max-floor|N|Long||Y|Maximum number of shares or contracts displayed by the I Would|
-|50002|auction-leftover|NN|Bool|N|Y|Order wants to participate in End of day Auction with leftover quantity|
-|50003|closing-auction-qty|NN|Long|0|Y|Quantity to only be traded in the End of day Auction |
-|50004|auction-intraday|NN|Bool|N|Y|Order wants to participate in Intraday Auction with slices calculated for that period|
-|50014|historical-on-close|N|Bool|N|Y|If a percentage of the order relative to the historical close volume should be reserved and only traded at the close|
-
-#### TWAP Body example
-``` json
-{
+  "account": "3",
   "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "twap",
-  "strategyParameter" : {
-    "max-floor": "100",    
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00"
-  }
+  "side": "BUY",
+  "qty": 100,
+  "ordType": "MARKET",
+  "timeInForce": "DAY"
 }
- ```
+```
 
-### 8.2. VWAP
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
-|110|min-qty|N|Long|0|Y|Minimum quantity of the order to be executed|
-|849|market-share|N|Decimal||Y|Maximum participation of the market volume (in percentage) |
-|10044|would-price|N|Decimal||Y|Trigger price for the strategy|
-|10014|consider-cross-orders|N|Bool|N|Y|Flag to indicate if cross orders should be considered in the execution|
-|10015|consider-limit-price|N|Bool|N|Y|Flag to indicate if market executions above the limit price should be considered by the strategy|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|50007|would-qty|N|Long||Y|Number of shares or contracts for I Would|
-|10020|would-max-floor|N|Long||Y|Maximum number of shares or contracts displayed by the I Would|
-|50002|auction-leftover|NN|Bool|N|Y|Order wants to participate in End of day Auction with leftover quantity|
-|50003|closing-auction-qty|NN|Long|0|Y|Quantity to only be traded in the End of day Auction |
-|50004|auction-intraday|NN|Bool|N|Y|Order wants to participate in Intraday Auction with slices calculated for that period|
-|50006|tilt|N|Int|0|Y|VWAP type: 0 (Regular), 1 (Backloaded), 2 (Frontloaded)|
-|50014|historical-on-close|N|Bool|N|Y|If a percentage of the order relative to the historical close volume should be reserved and only traded at the close|
-|50020|close-auction-participation|N|Decimal||Y|Close auction target participation of the market volume (in percentage) |
-|50021|max-close-auction-participation|N|Decimal||Y|Close auction maximum participation of the market volume (in percentage)|
-
-#### VWAP Body example
-``` json
+#### Example 2 — Limit order
+```json
 {
+  "entity": "CLIENT_UAT",
+  "execBroker": "935",
+  "account": "3",
   "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "vwap",
-  "strategyParameter" : {
-    "max-floor": "100",    
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00"
-  }
+  "side": "SELL",
+  "qty": 500,
+  "ordType": "LIMIT",
+  "price": 30.5,
+  "timeInForce": "DAY",
+  "memo": "my-memo",
+  "tag": "my-tag"
 }
 ```
 
-### 8.3. POV
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
-|99925|target-participation|Y|Decimal||Y|Target participation of the market volume (in percentage)|
-|10044|would-price|N|Decimal||Y|Trigger price for the strategy|
-|10014|consider-cross-orders|N|Bool|N|Y|Flag to indicate if cross orders should be considered in the execution|
-|10015|consider-limit-price|N|Bool|N|Y|Flag to indicate if market executions above the limit price should be considered by the strategy|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|50007|would-qty|N|Long||Y|Number of shares or contracts for I Would|
-|10020|would-max-floor|N|Long||Y|Maximum number of shares or contracts displayed by the I Would|
-|50002|auction-leftover|NN|Bool|N|Y|Order wants to participate in End of day Auction with leftover quantity|
-|50003|closing-auction-qty|NN|Long|0|Y|Quantity to only be traded in the End of day Auction |
-|50004|auction-intraday|NN|Bool|N|Y|Order wants to participate in Intraday Auction with slices calculated for that period|
-|50008|participation-tolerance|N|Decimal|0|Y|Participation tolerance for target participation|
-|50014|historical-on-close|N|Bool|N|Y|If a percentage of the order relative to the historical close volume should be reserved and only traded at the close|
-|50020|close-auction-participation|N|Decimal||Y|Close auction target participation of the market volume (in percentage) |
-|50021|max-close-auction-participation|N|Decimal||Y|Close auction maximum participation of the market volume (in percentage)|
- 
- #### POV Body example
-``` json
+#### Example 3 — Limit order with expiration (good-till-date)
+Use `expireDate` with a time-in-force that supports it.
+```json
 {
+  "entity": "CLIENT_UAT",
+  "execBroker": "935",
+  "account": "3",
+  "symbol": "VALE3",
+  "side": "BUY",
+  "qty": 200,
+  "ordType": "LIMIT",
+  "price": 60.25,
+  "timeInForce": "GTD",
+  "expireDate": "2026-12-31"
+}
+```
+
+#### Example 4 — Stop order
+`stopPx` is the trigger price.
+```json
+{
+  "entity": "CLIENT_UAT",
+  "execBroker": "935",
+  "account": "3",
   "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "pov",
-  "strategyParameter" : {
-    "max-floor": "100",
-    "target-participation": 10,    
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00"
-  }
+  "side": "SELL",
+  "qty": 100,
+  "ordType": "STOP",
+  "stopPx": 28.0,
+  "timeInForce": "DAY"
 }
 ```
 
-
-### 8.4. PEGGED
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|50002|auction-leftover|NN|Bool|N|Y|Order wants to participate in End of day Auction with leftover quantity|
-|50003|closing-auction-qty|NN|Long|0|Y|Quantity to only be traded in the End of day Auction |
-|50010|offset|N|Int|0|Y|Ticks offset of best price|
-|50014|historical-on-close|N|Bool|N|Y|If a percentage of the order relative to the historical close volume should be reserved and only traded at the close|
-|50020|close-auction-participation|N|Decimal||Y|Close auction target participation of the market volume (in percentage) |
-|50021|max-close-auction-participation|N|Decimal||Y|Close auction maximum participation of the market volume (in percentage)|
-
- #### PEGGED Body example
-``` json
+#### Example 5 — Stop-limit order
+Combines `stopPx` (trigger) and `price` (limit).
+```json
 {
+  "entity": "CLIENT_UAT",
+  "execBroker": "935",
+  "account": "3",
   "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "pegged",
-  "strategyParameter" : {
-    "max-floor": "100",
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00"
-  }
+  "side": "SELL",
+  "qty": 100,
+  "ordType": "STOP_LIMIT",
+  "stopPx": 28.0,
+  "price": 27.9,
+  "timeInForce": "DAY"
 }
 ```
 
- 
-### 8.5. SNIPER
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|110|min-qty|N|Long||Y|Minimum quantity of an order to be executed|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|50002|auction-leftover|NN|Bool|N|Y|Order wants to participate in End of day Auction with leftover quantity|
-|50003|closing-auction-qty|NN|Long|0|Y|Quantity to only be traded in the End of day Auction |
-|50014|historical-on-close|N|Bool|N|Y|If a percentage of the order relative to the historical close volume should be reserved and only traded at the close|
-|50020|close-auction-participation|N|Decimal||Y|Close auction target participation of the market volume (in percentage) |
-|50021|max-close-auction-participation|N|Decimal||Y|Close auction maximum participation of the market volume (in percentage)|
-
-#### SNIPER Body example
-``` json
+#### Example 6 — Iceberg-style limit order with `maxFloor` and `minQty`
+`maxFloor` limits the displayed quantity; `minQty` sets the minimum execution quantity.
+```json
 {
+  "entity": "CLIENT_UAT",
+  "execBroker": "935",
+  "account": "3",
+  "symbol": "ITUB4",
+  "side": "BUY",
+  "qty": 10000,
+  "ordType": "LIMIT",
+  "price": 32.1,
+  "maxFloor": 1000,
+  "minQty": 100,
+  "timeInForce": "DAY"
+}
+```
+
+#### Example 7 — Order with account, currency and country
+```json
+{
+  "entity": "ENTITY",
+  "execBroker": "BROKER",
+  "symbol": "AAPL",
+  "side": "BUY",
+  "qty": 50,
+  "ordType": "LIMIT",
+  "price": 190.0,
+  "timeInForce": "DAY",
+  "account": "ACCOUNT-01",
+  "currency": "USD",
+  "country": "US",
+  "isDMA": true
+}
+```
+
+#### Example 8 — Strategy (algo) order
+Set `strategy` and pass strategy keys in `strategyParameter` (all values are strings). `timeInForce` is optional for strategy orders. See [Algorithmic strategy parameters](#algorithmic-strategy-parameters), e.g. [GF_VWAP](#gf_vwap).
+```json
+{
+  "entity": "CLIENT_UAT",
+  "execBroker": "935",
+  "account": "3",
   "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "sniper",
-  "strategyParameter" : {    
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00"
+  "side": "BUY",
+  "qty": 100000,
+  "ordType": "LIMIT",
+  "price": 31.0,
+  "timeInForce": "DAY",
+  "strategy": "VWAP",
+  "strategyParameter": {
+    "start-time": "20261111-13:00:00",
+    "end-time": "20261111-19:30:00",
+    "market-share": "10",
+    "auction-leftover": "Y"
   }
 }
 ```
 
-
- 
-### 8.6. PEGGED-SNIPER
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
-|110|min-qty|N|Long||Y|Minimum quantity of an order to be executed|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|50002|auction-leftover|N|Bool|N|Y|Order wants to participate in End of day Auction with leftover quantity|
-|50003|closing-auction-qty|N|Long|0|Y|Quantity to only be traded in the End of day Auction |
-|50010|offset|N|Int|0|Y|Ticks offset of best price|
-|50011|sniper-price|Y|Decimal||Y|Trigger price for the strategy|
-|50014|historical-on-close|N|Bool|N|Y|If a percentage of the order relative to the historical close volume should be reserved and only traded at the close|
-|50020|close-auction-participation|N|Decimal||Y|Close auction target participation of the market volume (in percentage) |
-|50021|max-close-auction-participation|N|Decimal||Y|Close auction maximum participation of the market volume (in percentage)|
-
-#### PEGGED-SNIPER Body example
-``` json
+#### Example 9 — Parent order
+```json
 {
+  "entity": "CLIENT_UAT",
+  "execBroker": "935",
+  "account": "3",
   "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "pegged/sniper",
-  "strategyParameter" : {    
-    "sniper-price": 90.56,
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00"
-  }
-}
-```
- 
-### 8.7. ICEBERG
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
-|168|start-time|NN|[UTC](#utc)||Y|Execution start time|
-|126|end-time|NN|[UTC](#utc)||Y|Execution end time|
-|50002|auction-leftover|NN|Bool|N|Y|Order wants to participate in End of day Auction with leftover quantity|
-|50003|closing-auction-qty|NN|Long|0|Y|Quantity to only be traded in the End of day Auction |
-|50004|auction-intraday|NN|Bool|N|Y|Order wants to participate in Intraday Auction respecting its iceberg price|
-|50014|historical-on-close|N|Bool|N|Y|If a percentage of the order relative to the historical close volume should be reserved and only traded at the close|
-|50020|close-auction-participation|N|Decimal||Y|Close auction target participation of the market volume (in percentage) |
-|50021|max-close-auction-participation|N|Decimal||Y|Close auction maximum participation of the market volume (in percentage)|
-
- #### ICEBERG Body example
-``` json
-{
-  "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "iceberg",
-  "strategyParameter" : {    
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00"
-  }
-}
-```
- 
-### 8.8. TARGETCLOSE
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
-|849|market-share|C|Decimal||Y|Maximum participation of the market volume. Required if no start time is set|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|50002|auction-leftover|N|Bool|N|Y|Order wants to participate in End of day Auction with leftover quantity|
-|50003|closing-auction-qty|N|Long|0|Y|Quantity to only be traded in the End of day Auction |
-|50004|auction-intraday|N|Bool|N|Y|Order wants to participate in Intraday Auction with slices calculated for that period|
-|50014|historical-on-close|N|Bool|N|Y|If a percentage of the order relative to the historical close volume should be reserved and only traded at the close|
-|50020|close-auction-participation|N|Decimal||Y|Close auction target participation of the market volume (in percentage)|
-|50021|max-close-auction-participation|N|Decimal||Y|Close auction maximum participation of the market volume (in percentage)|
-
-#### TARGETCLOSE Body example
-``` json
-{
-  "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "targetclose",
-  "strategyParameter" : {    
-    "start-time": "20240515-20:00:00",
-	"end-time": "20240515-21:00:00"
-    "max-floor": "100"
-  }
+  "side": "BUY",
+  "qty": 10000,
+  "ordType": "market",
+  "memo": "parent",
+  "timeInForce": "DAY",
+  "isDMA": false
 }
 ```
 
-### 8.9. TIMED
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|111|max-floor|N|Long|Infinity|Y|Maximum displayed quantity|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|NN|[UTC](#utc)||Y|Execution end time|
-|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
-|50002|auction-leftover|C|Long||Y|Order wants to participate in End of day Auction with leftover quantity|
-
-#### TIMED Body example
-``` json
-{
-  "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "timed",
-  "strategyParameter" : {    
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00",
-    "max-floor": "100"
-  }
-}
+#### Successful response (`200`)
+```json
+{ "id": "<order id>" }
 ```
 
-
-### 8.10. PRE-OPEN
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
-
-#### PRE-OPEN Body example
-``` json
-{
-  "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "pre-open",
-  "strategyParameter" : {
-    "start-time": "20240515-12:00:00",
-    "end-time": "20240515-13:10:00"
-  }
-}
+#### Rejected response (`400`)
+```json
+{ "errorReason": "<reason>" }
 ```
 
+### PUT `/api/v3/order` — Replace order
+Body: [ReplaceOrder](#replaceorder) (required).
+Responses: `200` [IdResponse](#idresponse), `400` [RejectReasonResponse](#rejectreasonresponse), `401`, `500`.
 
-### 8.11. VOL-AUCTION
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|NN|[UTC](#utc)||Y|Execution end time|
-|849|market-share|C|Decimal||Y|Maximum participation of the market volume. Required if no start time is set|
-|50033|aggression-margin|C|Long||Y|Its sendes a limit order worsening the last traded price by the bps set in this parameter
+### DELETE `/api/v3/order` — Cancel multiple orders
+Cancels multiple orders by ID (`ClOrdId`).
+Body: JSON array of strings, e.g. `["id1", "id2"]` (required).
+Responses: `202` / `400` [CancelMultipleOrdersResponse](#cancelmultipleordersresponse), `401`, `500`.
 
-#### VOL-AUCTION Body example
-``` json
-{
-  "symbol": "PETR4",
-  "side": "S",
-  "qty": "200",
-  "account": "114",
-  "execBroker": "935",
-  "ordType": "Limit",
-  "timeInForce": "day",
-  "price": "90.56",
-  "isDMA": "true",                    
-  "entity": "CLIENT_UAT",            
-  "memo": "TEXT",                    
-  "strategy" : "vol-auction",
-  "strategyParameter" : {    
-    "start-time": "20240515-20:00:00",
-    "end-time": "20240515-21:00:00",
-    "market-share": 10
-  }
-}
-```
+### GET `/api/v3/order/summary` — Summarized orders
+Same query parameters as [All orders](#get-apiv3order--all-orders). Responses: `200` (array of [OrderSummary](#ordersummary)), `204`, `401`, `500`.
 
+### GET `/api/v3/order/{id}` — Order by ID
+Path param `id` (string, required). Responses: `200` [Order](#order), `204`, `401`, `500`.
 
-### 8.12. OPPORTUNISTIC
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
-|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
-|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
-|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
-|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
-|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+### DELETE `/api/v3/order/{id}` — Cancel order by ID
+Cancels by `ClOrdId` or `OrigClOrdId`. Path param `id` (required). Responses: `202`, `400`, `401`, `500`.
 
+### POST `/api/v3/order/basket` — New basket
+Creates a list of orders. Body: array of [NewOrder](#neworder) (required).
+Responses: `200` array of [IdResponse](#idresponse), `400` array of [RejectReasonResponse](#rejectreasonresponse), `401`, `500`.
 
-#### OPPORTUNISTIC Body example
-``` json
-{
-    "symbol": "PETR4",
-    "side": "S",
-    "qty": "200",
-    "account": "114",
-    "execBroker": "935",
-    "ordType": "Limit",
-    "timeInForce": "day",
-    "price": "90.56",
-    "isDMA": "true",
-    "entity": "CLIENT_UAT",
-    "memo": "TEXT",
-    "strategy": "opportunistic-2",
-    "strategyParameter": {
-        "urgency": "Moderate",
-        "max-vol-participation": 10,
-        "min-vol-participation": 2,
-        "start-time": "20240515-20:00:00",
-        "end-time": "20240515-21:00:00",
-        "trade-at-close": "true"
-    }
-}
- ```
- 
+### DELETE `/api/v3/order/myorders` — Cancel all my orders
+Cancels all of your orders. No parameters. Responses: `200`, `400`, `401`, `500`.
 
-### 8.13. LIQUIDITY-CAPTURE
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
-|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
-|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
-|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
-|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
-|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+## Trade endpoints (V3)
 
+### GET `/api/v3/trade` — All trades
 
-#### LIQUIDITY-CAPTURE Body example
-``` json
-{
-    "symbol": "PETR4",
-    "side": "B",
-    "qty": "500",
-    "account": "114",
-    "execBroker": "935",
-    "ordType": "Limit",
-    "timeInForce": "day",
-    "price": "90.56",
-    "isDMA": "true",
-    "entity": "CLIENT_UAT",
-    "memo": "TEXT",
-    "strategy": "liquidity-capture",
-    "strategyParameter": {
-        "urgency": "Passive",
-        "max-vol-participation": 15,
-        "start-time": "20240515-20:00:00",
-        "end-time": "20240515-21:00:00",
-        "finish-price": 91.00
-    }
-}
-```
+| Query param | Type | Description |
+|---|---|---|
+| `symbol` | string | Filter by symbol |
+| `side` | string | Filter by side |
+| `memo` | string | Filter by memo |
+| `assignedUser` | string | Filter by assigned user |
+| `fromOrderId` | string | Trades originated from the given order ID |
 
+Responses: `200` (array of [Trade](#trade)), `204`, `500`.
 
-### 8.14. SHORTFALL
-|Tag|Key|Req|Type|Default|Amend|Comment|
-|---|---|---|---|---|---|---
-|50062|urgency|N|Int||Y|Execution urgency: 0=SuperPassive, 1=Passive, 2=Moderate, 3=ModerateAggressive, 4=Aggressive, 5=SuperAggressive|
-|849|max-vol-participation|N|Decimal||Y|Maximum participation of the market volume|
-|99947|min-vol-participation|N|Decimal||Y|Minimum participation of the market volume|
-|168|start-time|N|[UTC](#utc)||Y|Execution start time|
-|126|end-time|N|[UTC](#utc)||Y|Execution end time|
-|10016|finish-price|N|Decimal||Y|Price at which the algo finishes the remaining quantity|
-|50004|trade-at-open|N|Boolean||Y|Participate in the intraday/opening auction|
-|50002|trade-at-close|N|Boolean||Y|Participate in the closing auction with the leftover quantity|
-|50066|finish-today|N|Boolean||Y|Force the order to be completed on the current trading day|
+### GET `/api/v3/trade/{id}` — Trade by ID
+Path param `id` (required). Responses: `200` [Trade](#trade), `204`, `500`.
 
+## Allocation endpoints (V3)
 
-#### SHORTFALL Body example
+### GET `/api/v3/allocation` — All allocations
 
-``` json
-{
-    "symbol": "PETR4",
-    "side": "S",
-    "qty": "1000",
-    "account": "114",
-    "execBroker": "935",
-    "ordType": "Limit",
-    "timeInForce": "day",
-    "price": "90.56",
-    "isDMA": "true",
-    "entity": "CLIENT_UAT",
-    "memo": "TEXT",
-    "strategy": "shortfall",
-    "strategyParameter": {
-        "urgency": "Aggressive",
-        "max-vol-participation": 20,
-        "min-vol-participation": 5,
-        "start-time": "20240515-20:00:00",
-        "end-time": "20240515-21:00:00",
-        "finish-today": "true"
-    }
-}
-```
+| Query param | Type | Description |
+|---|---|---|
+| `symbol` | string | Filter by symbol |
+| `side` | string | Filter by side |
+| `memo` | string | Filter by memo |
+| `user` | string | Filter by user |
 
- 
-## 9. Type Dictionary
- 
-### Side
-Identifies the side of the order.
- 
-| Value | Description |
-| --- | --- |
-| B | Buy |
-| S | Sell |
- 
-### OrdType
-Specifies the order type.
- 
-| Value | Description |
-| --- | --- |
-| Market | Market order |
-| Limit | Limit order |
-| Stop Limit | Ordem stop-limit |
- 
-### TimeInForce
-Specifies how long the order remains in effect.
- 
-| Value | Description |
-| --- | --- |
-| "Day" | The order will operate throughout the trading hours of the day. (does not participate in the auction). |
-| "Good Till Cancel” or "GTC" | The order will remain active until it is executed or canceled. |
-| "At the Opening" or "MOP" | Order valid for the opening auction. |
-| "Immediate or Cancel" or "IOC" | The order will be executed with the available quantity and immediately cancel the rest. |
-| "Fill or Kill" or "FOK" | If the order is not executed in full, the entire order will be cancelled. |
-| "Good Till Date" or "GTD" | This order will be valid until the date specified in the calendar below. |
-| "At the Close" or "MOC" | Order to be sent in the Closing Call. |
-| "Good for Auction" or "MOA" | Used for the opening auction and intraday auctions. |
- 
- 
-### IsDMA
-Indicates whether an order is DMA. If not, the order is classified as CARE.
- 
-| Value | Description |
-| --- | --- |
-| true | Order is classified as DMA |
-| false | Order is classified as CARE |
- 
-### Entity
-Specifies the entity.
-Type: String.
-**[Provided by the Solutions team.]**
- 
-### WorkingIndicator
-Indicates whether the order is still being worked on.
- 
-| Value | String |
-| --- | --- |
-| true | Y |
-| false | N |
- 
-### OrdStatus
-Specifies the status of the order.
- 
-| Value | Description |
-| --- | --- |
-| New | New |
-| Partial | Partially executed |
-| Filled | Executed |
-| Done for day | Order completed. It may have been partially executed or not executed at all. |
-| Canceled | Canceled |
-| Replaced | Amended |
-| Pending Cancel | Pending cancellation |
-| Rejected | Rejected |
-| Pending New | Pending creation. |
-| Expired | Expired |
-| Pending Replace | Pending change |
- 
-### ExecType
-Specifies the type of execution.
- 
-| Value | Description |
-| --- | --- |
-| New | New |
-| Done for day | Order completed. It may have been partially executed or not executed at all. |
-| Canceled | Canceled |
-| Replaced | Amended |
-| Pending Cancel | Pending cancellation |
-| Rejected | Rejected |
-| Pending New | Pending creation. |
-| Expired | Expired |
-| Restated | Modified. Change not requested by sellside. |
-| Pending Replace | Pending cancellation |
-| Trade | Executed or partially executed |
-| Requested | Requested |
- 
- 
-## 10. Formats
+Responses: `200` (array of [Allocation](#allocation)), `204`, `500`.
 
-#### UTC
-``yyyyMMdd-HH:mm:ss``
+### GET `/api/v3/allocation/{id}` — Allocation by ID
+Retrieves an allocation by ID, interpreted according to the ID type flag.
 
-#### Date
-``yyyy-MM-dd`` or ``yyyy-MM-ddTHH:mm``
+| Param | In | Type | Description |
+|---|---|---|---|
+| `id` | path | string (required) | Identifier |
+| `byOrderId` | query | boolean (default `false`) | Treat `id` as an order ID |
+| `byTradeId` | query | boolean (default `false`) | Treat `id` as a trade ID |
 
-#### DateTime
-(json format) ``2024-04-25T11:03:25.603-03:00`` or ``yyyy-MM-ddTHH:mm:ss.mmmm-GMTHH:GMTMM`` 
+Responses: `200`, `204`, `500`.
+
+## Legacy endpoints (V2 / V1)
+
+| Endpoint | Notes |
+|---|---|
+| `GET /api/v2/order` | Filters: `complete`, `symbol`, `status`, `side`, `memo`, `parent`. Returns [OrderV2](#orderv2). Responses 200/204/500. |
+| `GET /api/v2/order/id/{id}` | Order by ID. Responses 200/204/500. |
+| `DELETE /api/v2/order/myorders` | Cancel all my orders. Responses 200/500. |
+| `GET /api/v2/trade` | Filters: `symbol`, `id`, `side`, `memo`. Responses 200/204/500. |
+| `POST /api/v1/order` | Body [NewOrder](#neworder). Responses 202/400/401. |
+| `PUT /api/v1/order` | Body [ReplaceOrder](#replaceorder). Responses 202/400/401. |
+| `DELETE /api/v1/order/{id}` | Cancel by `ClOrdId` or `OrigClOrdId`. Responses 202/400/401. |
+
+## Schemas
+
+### NewOrder
+Required: `entity`, `execBroker`, `symbol`, `side`, `qty`, `ordType`.
+
+| Field | Type | Description |
+|---|---|---|
+| `entity` | string | **Required** |
+| `execBroker` | string | **Required** |
+| `symbol` | string | **Required** |
+| `side` | string | **Required** |
+| `qty` | number | **Required** |
+| `ordType` | string | **Required** |
+| `timeInForce` | string | Required for non-strategy orders |
+| `isDMA` | boolean | Default `true` |
+| `account`, `currency`, `country` | string | Optional |
+| `price` | number | Optional |
+| `expireDate` | string | Optional |
+| `maxFloor`, `stopPx`, `minQty` | number | Optional |
+| `strategy` | string | Algorithmic strategy name (see [strategies](#algorithmic-strategy-parameters)) |
+| `strategyParameter` | object (string→string) | Strategy parameters |
+| `memo`, `text`, `tag` | string | Optional |
+
+### ReplaceOrder
+Required: `id`.
+
+| Field | Type |
+|---|---|
+| `id` | string (**required**) |
+| `qty`, `leaves`, `price`, `displayQty`, `stopPx`, `minQty` | number |
+| `memo`, `timeInForce`, `expireDate` | string |
+| `strategyParameter` | object (string→string) |
+
+### CancelOrder
+`id` (string, required).
+
+### IdResponse
+`id` (string, required).
+
+### MessageResponse
+`message` (string).
+
+### RejectReasonResponse
+`errorReason` (string, required).
+
+### CancelMultipleOrdersResponse
+
+| Field | Type | Description |
+|---|---|---|
+| `allOk` | boolean | All cancels accepted |
+| `immediateRejectReason` | string \| null | Reason for immediate rejection |
+| `acceptedOrders` | array of [IdResponse](#idresponse) \| null | Accepted orders |
+| `rejectedOrders` | map of ID → [RejectReasonResponse](#rejectreasonresponse) \| null | Rejected orders |
+
+### Order
+All fields optional.
+
+| Field | Type |
+|---|---|
+| `id` | string (uuid) |
+| `execId`, `orderId`, `clOrdId`, `origClOrdID`, `secondaryOrderID` | string |
+| `qty`, `cumQty`, `avgPx`, `price`, `stopPx`, `minQty`, `maxFloor` | number |
+| `forexReq` | boolean |
+| `rejectReason`, `text`, `memo`, `account`, `subaccount`, `tag`, `service` | string |
+| `tradeDate`, `expireDate`, `transactTime`, `created`, `updated` | date-time |
+| `side`, `ordStatus`, `timeInForce`, `execType`, `ordType` | string |
+| `entity`, `resolvedAssignedUser`, `brokerExchangeCode`, `symbol`, `strategy` | string |
+| `strategyParameters` | object (string→string) |
+
+### OrderV2
+Same as [Order](#order), except it has `entityViewCode` and `applId` (string) instead of `entity`.
+
+### OrderSummary
+`orderId`, `clOrdId`, `cumQty`, `avgPx`, `rejectReason`, `memo`, `account`, `subaccount`, `tradeDate`, `side`, `ordStatus`, `entity`, `resolvedAssignedUser`, `symbol`, `strategy`.
+
+### Trade
+
+| Field | Type |
+|---|---|
+| `id` | string (uuid) |
+| `clientId`, `account`, `execBroker`, `exchange`, `side`, `symbol`, `currency`, `country` | string |
+| `qty`, `matchedQty` | number |
+| `price` | number \| null |
+| `clOrdId`, `origClOrdId`, `orderId`, `execId`, `execRefId`, `crossId` | string |
+| `enteredByUser`, `assignedUser`, `businessUnit`, `subaccount`, `deskId`, `enteringFirm` | string |
+| `tradeDate`, `transactTime` | date-time |
+| `text`, `memo`, `uniqueTradeId`, `tradeMatchId`, `lastMkt` | string |
+| `isBustFill` | boolean |
+| `lastCapacity`, `lastLiquidityIndicator` | int32 \| null |
+
+### Allocation
+Required: `id`, `orderId`, `tradeId`.
+
+| Field | Type |
+|---|---|
+| `id`, `orderId`, `tradeId` | string (uuid) |
+| `transactTime`, `tradeDate`, `localTradeDate`, `updated` | date-time |
+| `symbol`, `tradeCurrency`, `tradeExecId`, `tradeExecRefId`, `uniqueTradeId`, `localTransactTime`, `execBroker`, `tradeMemo` | string |
+| `qty`, `tradeQty`, `tradeMatchedQty`, `tradeUnmatchedQty` | number |
+| `tradePrice` | number \| null |
+| `settlementType` | char (1 character) |
+| `settlementTypeLiteral` | string (readable description of `settlementType`) |
+
+## Algorithmic strategy parameters
+
+Algorithmic orders are sent by setting `strategy` and passing the strategy's parameters in `strategyParameter`, a map of string keys to string values, in [NewOrder](#neworder) and [ReplaceOrder](#replaceorder). Each strategy below lists the parameters it accepts. All parameters are optional unless stated otherwise.
+
+### GF_ICEBERG
+
+Strategy "ICEBERG"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `max-floor` | integer | Limits all order sizes sent by the strategy, except the I Would. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `auction-intraday` | string | Wheter order should to participate in Intraday Auction. Accepted values: "Y", "N" (or omit for default). |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `target-participation` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+| `ord-type` | string |  |
+| `price` | number |  |
+| `dark-quantity` | number | Quantity to access dark liquidity. Only available in Brazil and US. |
+| `dark-price` | number | Price to access dark liquidity. Only available in Brazil and US. |
+
+### GF_LIQUIDITY_CAPTURE
+
+Strategy "LIQUIDITY-CAPTURE"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `urgency` | string | Urgency. Accepted values: "SuperPassive", "Passive", "Moderate", "ModerateAggressive", "Aggressive", "SuperAggressive" (or omit for default). |
+| `maximum-participation` | number | Maximum Participation. |
+| `minimum-participation` | number | Minimum Participation. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `finish-price` | number | Finish price. |
+| `trade-at-open` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `trade-at-close` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `finish-today` | string | FinishToday. Accepted values: "Y", "N" (or omit for default). |
+
+### GF_OPPORTUNISTIC_2
+
+Strategy "OPPORTUNISTIC-2"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `urgency` | string | Urgency. Accepted values: "SuperPassive", "Passive", "Moderate", "ModerateAggressive", "Aggressive", "SuperAggressive" (or omit for default). |
+| `maximum-participation` | number | Maximum Participation. |
+| `minimum-participation` | number | Minimum Participation. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `finish-price` | number | Finish price. |
+| `trade-at-open` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `trade-at-close` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `finish-today` | string | FinishToday. Accepted values: "Y", "N" (or omit for default). |
+
+### GF_PEGGED
+
+Strategy "PEGGED"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `max-floor` | integer | Limits all order sizes sent by the strategy, except the I Would. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `offset` | integer | Ticks to improve the price if positive or worsen if negative. |
+| `type` | string | Send orders in slices according to max-floor (Slice Mode) or optimize liquidity (Opportunistic Mode). Accepted values: "1" = Slice, "2" = Opportunistic. |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `target-participation` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+| `dark-quantity` | number | Quantity to access dark liquidity. Only available in Brazil and US. |
+| `dark-price` | number | Price to access dark liquidity. Only available in Brazil and US. |
+
+### GF_PEGGED_MARKET
+
+Strategy "PEGGED_MARKET"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `max-floor` | integer | Maximum displayed quantity. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `pegged-offset` | integer | Ticks to improve the best price disregard the side, it means, positive will cover the best price and negative will be under the best price. |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `market-qty` | integer | Quantity to be executed at market price at the start. |
+| `target-participation` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+
+### GF_PEGGED_SNIPER
+
+Strategy "PEGGED/SNIPER"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `max-floor` | integer | Limits all order sizes sent by the strategy, except the I Would. |
+| `min-qty` | integer | If set, minimum slice size to be used by the strategy. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `trigger-offset` | integer | Ticks to improve the best price disregard the side, it means, positive will cover the best price and negative will be under the best price. |
+| `trigger-price` | number | Trigger price for the strategy. |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `target-participation` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+| `dark-quantity` | number | Quantity to access dark liquidity. Only available in Brazil and US. |
+| `dark-price` | number | Price to access dark liquidity. Only available in Brazil and US. |
+
+### GF_POV
+
+Strategy "POV"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `max-floor` | integer | Limits all order sizes sent by the strategy, except the I Would. |
+| `target-participation` | number | Target participation that the strategy will try to keep during the execution. |
+| `would-price` | number | Determines the I Would price of the strategy. |
+| `consider-cross-order` | string | If set to true, will consider cross orders on the market share calculations. Accepted values: "Y", "N" (or omit for default). |
+| `consider-limit-price` | string | If set to true, will consider orders outside of limit price on the market share calculations. Accepted values: "Y", "N" (or omit for default). |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `would-qty` | integer | Determines the quantity that the user is willing to trade at the I Would Price. |
+| `would-max-floor` | integer | Determines the maximum size of the order posted at the I Would Price. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `auction-intraday` | string | Wheter order should to participate in Intraday Auction. Accepted values: "Y", "N" (or omit for default). |
+| `limit-by-volume-auction-qty` | string | Limits the closing auction quantity by the auction volume. Accepted values: "Y", "N" (or omit for default). |
+| `participation-tolerance` | number | If value is set, the strategy will be a little less aggressive and have more shares in its limit order. |
+| `bps-size-control` | integer |  |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `target-participation-close` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+| `dark-quantity` | number | Quantity to access dark liquidity. Only available in Brazil and US. |
+| `dark-price` | number | Price to access dark liquidity. Only available in Brazil and US. |
+| `dark-lit` | string | If set to true, algo will place a percentage of the order on dark source. Accepted values: "Y", "N" (or omit for default). |
+
+### GF_PRE_OPEN
+
+Strategy "PRE-OPEN"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `aggression-margin` | integer | Determines the agression margin for market orders. |
+
+### GF_SHORT_FALL
+
+Strategy "SHORTFALL"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `urgency` | string | Urgency. Accepted values: "SuperPassive", "Passive", "Moderate", "ModerateAggressive", "Aggressive", "SuperAggressive" (or omit for default). |
+| `maximum-participation` | number | Maximum Participation. |
+| `minimum-participation` | number | Minimum Participation. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `finish-price` | number | Finish price. |
+| `trade-at-open` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `trade-at-close` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `finish-today` | string | FinishToday. Accepted values: "Y", "N" (or omit for default). |
+
+### GF_SMART_SOR
+
+Strategy "SMARTSOR"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `stop-px` | number |  |
+| `ord-type` | string |  |
+| `min-qty` | integer | Quantity to be executed at market price at the start. |
+| `max-floor` | integer | Maximum displayed quantity. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `urgency` | string | Opportunistic parameter that sends orders based on the bid/offer price. Accepted values: "SUPER PASIVE", "PASSIVE", "MODERATE", "AGGRESSIVE", "SUPER AGGRESSIVE" (or omit for default). |
+| `open-auction` | string | Algorithm will participate on open auction if allowed by exchange. The whole quantity will be sent. Accepted values: "Y", "N" (or omit for default). |
+| `close-auction` | string | Algorithm will participate on close auction if allowed by exchange. The whole quantity will be sent. Accepted values: "Y", "N" (or omit for default). |
+
+### GF_SNIPER
+
+Strategy "SNIPER"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `min-qty` | integer | If set, minimum slice size to be used by the strategy. |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `target-participation` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+| `ord-type` | string |  |
+| `price` | number |  |
+| `dark-quantity` | number | Quantity to access dark liquidity. Only available in Brazil and US. |
+| `dark-price` | number | Price to access dark liquidity. Only available in Brazil and US. |
+
+### GF_TARGET_CLOSE
+
+Strategy "TARGETCLOSE"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `max-floor` | integer | Limits all order sizes sent by the strategy, except the I Would. |
+| `max-participation` | number | Maximum participation of the market volume (Required if start-time is not set) |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `auction-intraday` | string | Wheter order should to participate in Intraday Auction. Accepted values: "Y", "N" (or omit for default). |
+| `limit-by-volume-auction-qty` | string | Limits the closing auction quantity by the auction volume. Accepted values: "Y", "N" (or omit for default). |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `target-participation` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+
+### GF_TIMED
+
+Strategy "TIMED"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `aggression-margin` | integer | Determines the agression margin for market orders. |
+| `max-floor` | integer | Limits all order sizes sent by the strategy, except the I Would. |
+
+### GF_TWAP
+
+Strategy "TWAP"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `max-floor` | integer | Limits all order sizes sent by the strategy, except the I Would. |
+| `min-qty` | integer | If set, minimum slice size to be used by the strategy. |
+| `market-share` | number | Limits the maximum market participation of the strategy. |
+| `would-price` | number | Determines the I Would price of the strategy. |
+| `consider-cross-order` | string | If set to true, will consider cross orders on the market share calculations. Accepted values: "Y", "N" (or omit for default). |
+| `consider-limit-price` | string | If set to true, will consider orders outside of limit price on the market share calculations. Accepted values: "Y", "N" (or omit for default). |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `would-qty` | integer | Determines the quantity that the user is willing to trade at the I Would Price. |
+| `would-max-floor` | integer | Determines the maximum size of the order posted at the I Would Price. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `auction-intraday` | string | Wheter order should to participate in Intraday Auction. Accepted values: "Y", "N" (or omit for default). |
+| `limit-by-volume-auction-qty` | string | Limits the closing auction quantity by the auction volume. Accepted values: "Y", "N" (or omit for default). |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `target-participation` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+| `dark-quantity` | number | Quantity to access dark liquidity. Only available in Brazil and US. |
+| `dark-price` | number | Price to access dark liquidity. Only available in Brazil and US. |
+| `dark-lit` | string | If set to true, algo will place a percentage of the order on dark source. Accepted values: "Y", "N" (or omit for default). |
+
+### GF_VOL_AUCTION
+
+Strategy "VOL-AUCTION"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `auction-participation` | number | Auction target participation of the market volume (in percentage) |
+| `aggression-margin` | integer | Determines the agression margin for market orders. |
+
+### GF_VWAP
+
+Strategy "VWAP"
+
+| Parameter | Type | Description |
+|---|---|---|
+| `max-floor` | integer | Limits all order sizes sent by the strategy, except the I Would. |
+| `min-qty` | integer | If set, minimum slice size to be used by the strategy. |
+| `market-share` | number | Limits the maximum market participation of the strategy. |
+| `would-price` | number | Determines the I Would price of the strategy. |
+| `consider-cross-order` | string | If set to true, will consider cross orders on the market share calculations. Accepted values: "Y", "N" (or omit for default). |
+| `consider-limit-price` | string | If set to true, will consider orders outside of limit price on the market share calculations. Accepted values: "Y", "N" (or omit for default). |
+| `start-time` | string | Determines when the strategy will begin. This field can only be modified if the strategy is not started and the time is later than the current time. |
+| `end-time` | string | Determines the terminal time of the strategy. This field can be modified during the execution and its default value is the end of the continuum trading period before the closing auction. |
+| `would-qty` | integer | Determines the quantity that the user is willing to trade at the I Would Price. |
+| `would-max-floor` | integer | Determines the maximum size of the order posted at the I Would Price. |
+| `auction-leftover` | string | If the strategy doesn't finish before the closing auction, it will participate with the leftover quantity of the order respecting the price and volume limit of the order. Accepted values: "Y", "N" (or omit for default). |
+| `closing-auction-qty` | integer | Quantity to only be traded at the closing auction respecting its limit price if present. |
+| `auction-intraday` | string | Wheter order should to participate in Intraday Auction. Accepted values: "Y", "N" (or omit for default). |
+| `limit-by-volume-auction-qty` | string | Limits the closing auction quantity by the auction volume. Accepted values: "Y", "N" (or omit for default). |
+| `tilt` | integer | Mode on which we will load the VWAP curve (options: regular, backloaded or frontloaded). |
+| `historical-on-close` | string | Consider historical auction close volumes to calculate the amount reserved for current day closing auction. Accepted values: "Y", "N" (or omit for default). |
+| `target-participation` | number | Close auction target participation of the market volume (in percentage) |
+| `max-target-participation` | number | Close auction maximum participation of the market volume (in percentage) |
+| `dark-quantity` | number | Quantity to access dark liquidity. Only available in Brazil and US. |
+| `dark-price` | number | Price to access dark liquidity. Only available in Brazil and US. |
+| `dark-lit` | string | If set to true, algo will place a percentage of the order on dark source. Accepted values: "Y", "N" (or omit for default). |
